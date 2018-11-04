@@ -11,18 +11,10 @@ package net.eu5.juliendecharentenay.psychrometricsJava;
 public class WetBulbTemperature extends Temperature {
 
 	/**
-	 * @param valueInC
+	 * @param t
 	 */
-	public WetBulbTemperature(Double valueInC) {
-		super(valueInC);
-	}
-
-	/**
-	 * @param value
-	 * @param unit
-	 */
-	public WetBulbTemperature(Double value, String unit) {
-		super(value, unit);
+	public WetBulbTemperature(Temperature t) {
+		super(t);
 	}
 
 }

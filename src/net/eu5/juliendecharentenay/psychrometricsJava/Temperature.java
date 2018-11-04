@@ -15,31 +15,29 @@ public class Temperature {
 
 	private Double _valueInC;
 	
-	public Temperature(Double valueInC) {_valueInC = valueInC;}
-	public Temperature(Double value, String unit) {
+	private Temperature(Double valueInC) {_valueInC = valueInC;}
+	protected Temperature(Temperature t) {_valueInC = t._valueInC; }
+	
+	private static Temperature make(Double value, String unit) {
 		switch (unit) {
 		case CELSIUS:
-			_valueInC = makeFromCelsius(value);
-			break;
+			return makeFromCelsius(value);
 		case FAHRENHEIT:
-			_valueInC = makeFromFahrenheit(value);
-			break;
+			return makeFromFahrenheit(value);
 		case KELVIN:
-			_valueInC = makeFromKelvin(value);
-			break;
+			return makeFromKelvin(value);
 		default:
-			_valueInC = null;
-			break;
+			return null;
 		}
 	}
 
-	private static Double makeFromCelsius(Double value) { return value; }
+	private static Temperature makeFromCelsius(Double value) { return new Temperature(value); }
 	public Double toCelsius() {return _valueInC;}
 	
-	private static Double makeFromFahrenheit(Double value) {return (value - 32.0) * 5.0/9.0; }
+	private static Temperature makeFromFahrenheit(Double value) {return new Temperature ((value - 32.0) * 5.0/9.0); }
 	public Double toFahrenheit() {return _valueInC * 9.0/5.0 + 32.0;}
 	
-	private static Double makeFromKelvin(Double value) {return (value - 273.15);}
+	private static Temperature makeFromKelvin(Double value) {return new Temperature(value - 273.15);}
 	public Double toKelvin() {return _valueInC + 273.15; }
 	
 }

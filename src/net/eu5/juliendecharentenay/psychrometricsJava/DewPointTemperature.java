@@ -11,18 +11,10 @@ package net.eu5.juliendecharentenay.psychrometricsJava;
 public class DewPointTemperature extends Temperature {
 
 	/**
-	 * @param valueInC
+	 * @param t
 	 */
-	public DewPointTemperature(Double valueInC) {
-		super(valueInC);
-	}
-
-	/**
-	 * @param value
-	 * @param unit
-	 */
-	public DewPointTemperature(Double value, String unit) {
-		super(value, unit);
+	public DewPointTemperature(Temperature t) {
+		super(t);
 	}
 
 }

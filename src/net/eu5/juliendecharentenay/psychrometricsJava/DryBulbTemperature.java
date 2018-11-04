@@ -6,6 +6,5 @@ package net.eu5.juliendecharentenay.psychrometricsJava;
  *
  */
 public class DryBulbTemperature extends Temperature {
-	public DryBulbTemperature(Double valueInC) { super(valueInC); }
-	public DryBulbTemperature(Double value, String unit) { super(value, unit); }
+	public DryBulbTemperature(Temperature t) { super(t); }
 }
