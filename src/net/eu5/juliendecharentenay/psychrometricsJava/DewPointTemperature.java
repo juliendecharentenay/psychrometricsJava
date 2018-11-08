@@ -17,4 +17,11 @@ public class DewPointTemperature extends Temperature {
 		super(t);
 	}
 
+	/*
+	 * Static make functions derived from super class
+	 */
+	public static DewPointTemperature makeFromCelsius(Double value) { return new DewPointTemperature(Temperature.makeFromCelsius(value)); }
+	public static DewPointTemperature makeFromFahrenheit(Double value) { return new DewPointTemperature(Temperature.makeFromFahrenheit(value)); }
+	public static DewPointTemperature makeFromKelvin(Double value) { return new DewPointTemperature(Temperature.makeFromKelvin(value)); }
+	
 }
