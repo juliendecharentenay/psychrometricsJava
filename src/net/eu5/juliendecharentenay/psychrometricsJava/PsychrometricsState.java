@@ -9,51 +9,163 @@ package net.eu5.juliendecharentenay.psychrometricsJava;
  *
  */
 public class PsychrometricsState {
+	private StandardPressure _p = null;
+
 	private DryBulbTemperature _dbt = null;
 	private DewPointTemperature _dpt = null;
 	private Enthalpy _h = null;
 	private HumidityRatio _hr = null;
 	private RelativeHumidity _rh = null;
-	private StandardPressure _p = null;
 	private WetBulbTemperature _wbt = null;
+
+	/** These 2 are using a time marching algorithm */
+	public PsychrometricsState(Enthalpy h, RelativeHumidity rh,  StandardPressure p) throws Exception { }
+
+	/** These 2 are using a time marching algorithm */
+	public PsychrometricsState(HumidityRatio hr, RelativeHumidity rh,  StandardPressure p) throws Exception { }
+
+	public PsychrometricsState(StandardPressure p,  RelativeHumidity rh, DewPointTemperature dpt) throws Exception { this(dpt, rh, p); }
+	public PsychrometricsState(StandardPressure p, DewPointTemperature dpt,  RelativeHumidity rh) throws Exception { this(dpt, rh, p); }
+	public PsychrometricsState(RelativeHumidity rh, DewPointTemperature dpt, StandardPressure p) throws Exception { this(dpt, rh, p); }
+	public PsychrometricsState(DewPointTemperature dpt, RelativeHumidity rh, StandardPressure p) throws Exception { 
+		this(HumidityRatio.makeFromKgKgdryair(PsychrometricsState.getHumidityRatioFromDpt(dpt.toCelsius(), p.toPascal())),
+				rh, p);
+		_dpt = dpt;
+	}	
 	
-	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, WetBulbTemperature wbt) { this(dbt, wbt, p); }
-	public PsychrometricsState(StandardPressure p, WetBulbTemperature wbt, DryBulbTemperature dbt) { this(dbt, wbt, p); }
-	public PsychrometricsState(WetBulbTemperature wbt, DryBulbTemperature dbt, StandardPressure p) { this(dbt, wbt, p); }
-	public PsychrometricsState(DryBulbTemperature dbt, WetBulbTemperature wbt, StandardPressure p) {
+	public PsychrometricsState(StandardPressure p, WetBulbTemperature wbt, HumidityRatio hr) throws Exception { this(hr, wbt, p); } 
+	public PsychrometricsState(StandardPressure p, HumidityRatio hr, WetBulbTemperature wbt) throws Exception { this(hr, wbt, p); } 
+	public PsychrometricsState(WetBulbTemperature wbt, HumidityRatio hr, StandardPressure p) throws Exception { this(hr, wbt, p); } 
+	public PsychrometricsState(HumidityRatio hr, WetBulbTemperature wbt, StandardPressure p) throws Exception { 
+		this(DewPointTemperature.makeFromCelsius(PsychrometricsState.getDewPointTemperature(hr.toKgKgdryair(), p.toPascal())), wbt, p);
+		_hr = hr;
+	}
+	
+	public PsychrometricsState(StandardPressure p, DewPointTemperature dpt, WetBulbTemperature wbt) throws Exception { this (dpt, wbt, p); }
+	public PsychrometricsState(StandardPressure p, WetBulbTemperature wbt, DewPointTemperature dpt) throws Exception { this (dpt, wbt, p); }
+	public PsychrometricsState(WetBulbTemperature wbt, DewPointTemperature dpt, StandardPressure p) throws Exception { this (dpt, wbt, p); }
+	public PsychrometricsState(DewPointTemperature dpt,  WetBulbTemperature wbt, StandardPressure p) throws Exception { 
+		this(DryBulbTemperature.makeFromCelsius(PsychrometricsState.getDryBulbTemperatureFromWbtDptP(wbt.toCelsius(), dpt.toCelsius(), p.toPascal())), wbt, p);
+		_dpt = dpt;
+	}	
+	
+	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, Enthalpy h) throws Exception { this(dbt, h, p); }
+	public PsychrometricsState(StandardPressure p, Enthalpy h, DryBulbTemperature dbt) throws Exception { this(dbt, h, p); }
+	public PsychrometricsState(Enthalpy h, DryBulbTemperature dbt, StandardPressure p) throws Exception { this(dbt, h, p); }
+	public PsychrometricsState(DryBulbTemperature dbt,  Enthalpy h, StandardPressure p) throws Exception { 
+		this(dbt, HumidityRatio.makeFromKgKgdryair(PsychrometricsState.getHumidityRatioFromDbtH(dbt.toCelsius(), h.toKJKgdryair())), p);
+		_h = h;
+	}
+
+	public PsychrometricsState(StandardPressure p, Enthalpy h, DewPointTemperature dpt) throws Exception { this(dpt, h, p); }
+	public PsychrometricsState(StandardPressure p, DewPointTemperature dpt, Enthalpy h) throws Exception { this(dpt, h, p); }
+	public PsychrometricsState(Enthalpy h, DewPointTemperature dpt,  StandardPressure p) throws Exception { this(dpt, h, p); }
+	public PsychrometricsState(DewPointTemperature dpt,  Enthalpy h, StandardPressure p) throws Exception { 
+		this(DryBulbTemperature.makeFromCelsius(
+					PsychrometricsState.getDryBulbTemperatureFromHW(h.toKJKgdryair(), 
+											PsychrometricsState.getHumidityRatioFromDpt(dpt.toCelsius(), p.toPascal()))),
+				h, 
+				p);
+		_dpt = dpt;
+	}
+
+
+	public PsychrometricsState(StandardPressure p, HumidityRatio hr,  Enthalpy h) throws Exception { this(h, hr, p); }
+	public PsychrometricsState(StandardPressure p,  Enthalpy h, HumidityRatio hr) throws Exception { this(h, hr, p); }
+	public PsychrometricsState(HumidityRatio hr,  Enthalpy h, StandardPressure p) throws Exception { this(h, hr, p); }
+	public PsychrometricsState(Enthalpy h, HumidityRatio hr,  StandardPressure p) throws Exception { 
+		this(DryBulbTemperature.makeFromCelsius(PsychrometricsState.getDryBulbTemperatureFromHW(h.toKJKgdryair(), hr.toKgKgdryair())), hr, p);
+		_h = h;
+	}
+	
+	
+	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, WetBulbTemperature wbt) throws Exception { this(dbt, wbt, p); }
+	public PsychrometricsState(StandardPressure p, WetBulbTemperature wbt, DryBulbTemperature dbt) throws Exception { this(dbt, wbt, p); }
+	public PsychrometricsState(WetBulbTemperature wbt, DryBulbTemperature dbt, StandardPressure p) throws Exception { this(dbt, wbt, p); }
+	public PsychrometricsState(DryBulbTemperature dbt, WetBulbTemperature wbt, StandardPressure p) throws Exception {
 		_dbt = dbt; _wbt = wbt; _p = p;
 	}
+	
+	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, RelativeHumidity rh) throws Exception { this(dbt, rh, p); }
+	public PsychrometricsState(StandardPressure p, RelativeHumidity rh, DryBulbTemperature dbt) throws Exception { this(dbt, rh, p); }
+	public PsychrometricsState(RelativeHumidity rh, DryBulbTemperature dbt, StandardPressure p) throws Exception { this(dbt, rh, p); }
+	public PsychrometricsState(DryBulbTemperature dbt, RelativeHumidity rh, StandardPressure p) throws Exception {
+		_dbt = dbt; _rh = rh; _p = p;
+		_wbt = WetBulbTemperature.makeFromCelsius(getWetBulbTemperatureFromDbtRhP(_dbt.toCelsius(), _rh.toNormalized(), _p.toPascal()));
+	}
+	
+	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, HumidityRatio hr) throws Exception { this(dbt, hr, p); }
+	public PsychrometricsState(StandardPressure p, HumidityRatio hr, DryBulbTemperature dbt) throws Exception { this(dbt, hr, p); }
+	public PsychrometricsState(HumidityRatio hr, DryBulbTemperature dbt, StandardPressure p) throws Exception { this(dbt, hr, p); }
+	public PsychrometricsState(DryBulbTemperature dbt, HumidityRatio hr, StandardPressure p) throws Exception {
+		_dbt = dbt; _hr = hr; _p = p;
+		_wbt = WetBulbTemperature.makeFromCelsius(getWetBulbTemperatureFromDbtWP(_dbt.toCelsius(), _hr.toKgKgdryair(), _p.toPascal()));
+	}
+
+	public PsychrometricsState(StandardPressure p, WetBulbTemperature wbt, RelativeHumidity rh) throws Exception { this(wbt, rh, p); }
+	public PsychrometricsState(StandardPressure p, RelativeHumidity rh, WetBulbTemperature wbt) throws Exception { this(wbt, rh, p); }
+	public PsychrometricsState(RelativeHumidity rh, WetBulbTemperature wbt, StandardPressure p) throws Exception { this(wbt, rh, p); }
+	public PsychrometricsState(WetBulbTemperature wbt, RelativeHumidity rh, StandardPressure p) throws Exception {
+		_wbt = wbt; _rh = rh; _p = p;
+		_dbt = DryBulbTemperature.makeFromCelsius(getDryBulbTemperatureFromWbtRhP(_wbt.toCelsius(), _rh.toNormalized(), _p.toPascal()));
+	}
+	
+	public PsychrometricsState(StandardPressure p, DryBulbTemperature dbt, DewPointTemperature dpt) throws Exception { this(dbt, dpt, p); }
+	public PsychrometricsState(StandardPressure p,  DewPointTemperature dpt, DryBulbTemperature dbt) throws Exception { this(dbt, dpt, p); }
+	public PsychrometricsState(DewPointTemperature dpt, DryBulbTemperature dbt, StandardPressure p) throws Exception { this(dbt, dpt, p); }
+	public PsychrometricsState(DryBulbTemperature dbt,  DewPointTemperature dpt, StandardPressure p) throws Exception {
+		this(dbt, HumidityRatio.makeFromKgKgdryair(getHumidityRatioFromDpt(dpt.toCelsius(), p.toPascal())), p);
+		_dpt = dpt;
+	}
+
+
 	
 	public DryBulbTemperature getDryBulbTemperature() {
 		return _dbt;
 	}
 	
 	public DewPointTemperature getDewPointTemperature() {
-		if (_dpt == null) {
-			_dpt = DewPointTemperature.makeFromCelsius(PsychrometricsState.getHumidityRatioFromDbtWbt(_dbt.toCelsius(), wbt.toCelsius(), p.toPascal()));
+		try {
+			if (_dpt == null) {
+				_dpt = DewPointTemperature.makeFromCelsius(PsychrometricsState.getDewPointTemperature(PsychrometricsState.getHumidityRatioFromDbtWbt(_dbt.toCelsius(), _wbt.toCelsius(), _p.toPascal()), _p.toPascal()));
+			}
+			return _dpt;
+		} catch (Exception e) {			
 		}
-		return _dpt;
+		return null;
 	}
 	
 	public Enthalpy getEnthalpy() {
-		if (_h == null) {
-			_h = Enthalpy.makeFromKJKgdryair(PsychrometricsState.getEnthalpy(_dbt.toCelsius(), getHumidityRatio().toKgKgdryair()));
+		try {
+			if (_h == null) {
+				_h = Enthalpy.makeFromKJKgdryair(PsychrometricsState.getEnthalpy(_dbt.toCelsius(), getHumidityRatio().toKgKgdryair()));
+			}
+			return _h;
+		} catch (Exception e) {			
 		}
-		return _h;
+		return null;
 	}
 	
 	public HumidityRatio getHumidityRatio() {
-		if (_hr == null) {
-			_hr = HumidityRatio.makeFromKgKgdryair(PsychrometricsState.getHumidityRatioFromDbtWbt(_dbt.toCelsius(), _wbt.toCelsius(), _p.toPascal()));
+		try {
+			if (_hr == null) {
+				_hr = HumidityRatio.makeFromKgKgdryair(PsychrometricsState.getHumidityRatioFromDbtWbt(_dbt.toCelsius(), _wbt.toCelsius(), _p.toPascal()));
+			}
+			return _hr;
+		} catch (Exception e) {			
 		}
-		return _hr;
+		return null;
 	}
 	
 	public RelativeHumidity getRelativeHumidity() {
-		if (_rh == null) {
-			_rh = RelativeHumidity.makeFromNormalized(PsychrometricsState.getRelativeHumidityFromDbtWbt(_dbt.toCelsius(), _wbt.toCelsius(), _p.toPascal()));			
+		try {
+			if (_rh == null) {
+				_rh = RelativeHumidity.makeFromNormalized(PsychrometricsState.getRelativeHumidityFromDbtWbt(_dbt.toCelsius(), _wbt.toCelsius(), _p.toPascal()));			
+			}
+			return _rh;
+		} catch (Exception e) {			
 		}
-		return _rh;
+		return null;
 	}
 	
 	public StandardPressure getStandardPressure() {
@@ -81,8 +193,9 @@ public class PsychrometricsState {
 	 *   t: temperature in Celsius
 	 * return 
 	 *   p: in pascal
+	 * @throws Exception 
 	 */
-	private static Double getWaterVaporSaturationPressure(Double t) {
+	private static Double getWaterVaporSaturationPressure(Double t) throws Exception {
 	  if ((t < TMIN) || (t > TMAX)) {
 	    throw new Exception("Water vaport saturation pressure only valid for temperature between -100.0 and +200.0 Celsius. Temperature provided is: " + t);
 	  }
@@ -118,7 +231,7 @@ public class PsychrometricsState {
 	 * return 
 	 *   W: in kg water / kg dry-air
 	 */
-	private static Double getHumidityRatio(Double p, Double pw) {
+	private static Double getHumidityRatio(Double p, Double pw) throws Exception {
 	  return 0.621945*pw/(p-pw);
 	};
 
@@ -133,8 +246,9 @@ public class PsychrometricsState {
 	 *  p: pressure (Pa)
 	 * return 
 	 *   W: in kg water / kg dry-air
+	 * @throws Exception 
 	 */
-	private static Double getHumidityRatioFromDbtWbt(Double dbt, Double wbt, Double p) {
+	private static Double getHumidityRatioFromDbtWbt(Double dbt, Double wbt, Double p) throws Exception {
 	  Double pws_star = getWaterVaporSaturationPressure(wbt);
 	  Double ws_star = getHumidityRatio(p, pws_star);
 	  Double w = null;
@@ -157,7 +271,7 @@ public class PsychrometricsState {
 	 * return:
 	 *   relative humidity: between 0 and 1
 	 */
-	private static Double getRelativeHumidityFromDbtWbt(Double dbt, Double wbt, Double p) {
+	private static Double getRelativeHumidityFromDbtWbt(Double dbt, Double wbt, Double p) throws Exception {
 	  Double w = getHumidityRatioFromDbtWbt(dbt, wbt, p); 
 	  return getRelativeHumidityFromDbtW(dbt, w, p);
 	};
@@ -174,7 +288,7 @@ public class PsychrometricsState {
 	 * return:
 	 *   relative humidity: between 0 and 1
 	 */
-	private static Double getRelativeHumidityFromDbtW(Double dbt, Double w, Double p) {
+	private static Double getRelativeHumidityFromDbtW(Double dbt, Double w, Double p) throws Exception {
 	  Double pws = getWaterVaporSaturationPressure(dbt);  // eq (5) and (6)
 	  Double ws = getHumidityRatio(p, pws);               // eq (22)
 	  Double mu = w/ws;                                   // eq (12)
@@ -192,7 +306,7 @@ public class PsychrometricsState {
 	 * return 
 	 *  dpt: temperature (C)
 	 */
-	private static Double getDewPointTemperature(Double w, Double p) {
+	private static Double getDewPointTemperature(Double w, Double p) throws Exception {
 	  Double pw = p/1000.0*w/(0.621945+w);
 	  Double alpha = Math.log(pw);
 	  Double c14 = 6.54;
@@ -216,7 +330,7 @@ public class PsychrometricsState {
 	 * return 
 	 *  w: humidity ratio (kg/kgda)
 	 */
-	private static Double getHumidityRatioFromDpt(Double dpt, Double p) {
+	private static Double getHumidityRatioFromDpt(Double dpt, Double p) throws Exception {
 	  return getHumidityRatioFromDbtWbt(dpt, dpt, p);
 	};
 
@@ -231,7 +345,7 @@ public class PsychrometricsState {
 	 * return 
 	 *  h: enthalpy (kJ/kgda)
 	 */
-	private static Double getEnthalpy(Double dbt, Double w) {
+	private static Double getEnthalpy(Double dbt, Double w) throws Exception {
 	  return 1.006*dbt + w*(2501.0 + 1.86*dbt);
 	};
 
@@ -246,7 +360,7 @@ public class PsychrometricsState {
 	 * return 
 	 *  dbt: dry-bulb temperature (C)
 	 */
-	private static Double getDryBulbTemperatureFromHW(Double h, Double w) {
+	private static Double getDryBulbTemperatureFromHW(Double h, Double w) throws Exception {
 	  return (h - w*2501.0)/(1.006 + w*1.86);
 	};
 
@@ -261,7 +375,7 @@ public class PsychrometricsState {
 	 * return 
 	 *  w: humidity ratio (kg/kgda)
 	 */
-	private static Double getHumidityRatioFromDbtH(Double dbt, Double h) {
+	private static Double getHumidityRatioFromDbtH(Double dbt, Double h) throws Exception {
 	  return (h - 1.006*dbt)/(2501.0 + 1.86*dbt);
 	};
 
@@ -276,11 +390,21 @@ public class PsychrometricsState {
 	 * return 
 	 *  wbt: wet-bulb temperature (C)
 	 */
-	private static Double getWetBulbTemperatureFromDbtWP(Double dbt, Double w, Double p) {
-	  return PsychrometricsJS.solveBisection(PsychrometricsJS.TMIN, dbt, w, 1e-8,
-	                        function(wbt) {
-	                          return PsychrometricsJS.SI.getHumidityRatioFromDbtWbt(this.dbt, wbt, this.p);
-	                        }.bind({'dbt': dbt, 'p': p}));
+	private static class GetWetBulbTemperatureFromDbtWPFunctionObject implements Solver.FunctionObject {
+		private Double _dbt;
+		private Double _p;
+		public GetWetBulbTemperatureFromDbtWPFunctionObject(Double dbt, Double p) {
+			_dbt = dbt; _p = p;
+		}
+		
+		@Override
+		public Double evaluate(Double v) throws Exception {
+			return getHumidityRatioFromDbtWbt(_dbt, v, _p);
+		}
+	}
+	private static Double getWetBulbTemperatureFromDbtWP(Double dbt, Double w, Double p) throws Exception {
+	  return Solver.INSTANCE.bisection(TMIN, dbt, w, 1e-8,
+			  new GetWetBulbTemperatureFromDbtWPFunctionObject(dbt, p));
 	};
 
 	/**
@@ -294,11 +418,21 @@ public class PsychrometricsState {
 	 * return 
 	 *  dbt: dry-bulb temperature (C)
 	 */
-	private static Double getDryBulbTemperatureFromWbtRhP(Double wbt, Double rh, Double p) {
-	  return PsychrometricsJS.solveGradient(PsychrometricsJS.TMIN, PsychrometricsJS.TMAX, wbt, rh, 0.1, 1e-8,
-	                        function(dbt) {
-	                          return PsychrometricsJS.SI.getRelativeHumidityFromDbtWbt(dbt, this.wbt, this.p);
-	                        }.bind({'wbt': wbt, 'p': p}));
+	private static class GetDryBulbTemperatureFromWbtRhPFunctionObject implements Solver.FunctionObject {
+		private Double _wbt;
+		private Double _p;
+		public GetDryBulbTemperatureFromWbtRhPFunctionObject(Double wbt, Double p) {
+			_wbt = wbt; _p = p;
+		}
+		
+		@Override
+		public Double evaluate(Double v) throws Exception {
+			return getRelativeHumidityFromDbtWbt(v, _wbt, _p);
+		}
+	}
+	private static Double getDryBulbTemperatureFromWbtRhP(Double wbt, Double rh, Double p) throws Exception {
+	  return Solver.INSTANCE.gradient(TMIN, TMAX, wbt, rh, 0.1, 1e-8,
+			  new GetDryBulbTemperatureFromWbtRhPFunctionObject(wbt, p));
 	};
 
 	/**
@@ -312,51 +446,93 @@ public class PsychrometricsState {
 	 * return 
 	 *  wbt: wet-bulb temperature (C)
 	 */
-	private static Double getWetBulbTemperatureFromDbtRhP(Double dbt, Double rh, Double p) {
-	  return PsychrometricsJS.solveBisection(PsychrometricsJS.TMIN, dbt, rh, 1e-8,
-	                        function(wbt) {
-	                          return PsychrometricsJS.SI.getRelativeHumidityFromDbtWbt(this.dbt, wbt, this.p);
-	                        }.bind({'dbt': dbt, 'p': p}));
+	private static class GetWetBulbTemperatureFromDbtRhPFunctionObject implements Solver.FunctionObject {
+		private Double _dbt;
+		private Double _p;
+		public GetWetBulbTemperatureFromDbtRhPFunctionObject(Double dbt, Double p) {
+			_dbt = dbt; _p = p;
+		}
+
+		@Override
+		public Double evaluate(Double v) throws Exception {
+			return getRelativeHumidityFromDbtWbt(_dbt, v, _p);
+		}		
+	}
+	private static Double getWetBulbTemperatureFromDbtRhP(Double dbt, Double rh, Double p) throws Exception {
+	  return Solver.INSTANCE.bisection(TMIN, dbt, rh, 1e-8,
+			  new GetWetBulbTemperatureFromDbtRhPFunctionObject(dbt, p));
 	};
 
 	/**
-	 * Numerical Solver: Using bisection method
+	 * Calculate dry-bulb temperature from wet-bulb temperature, dew-point temperature and pressure
+	 * Uses numerical solver
+	 *
+	 * Input:
+	 *  wbt: dry-bulb temperature (C)
+	 *  dpt: dew point temperature (C)
+	 *  p: pressure (Pa)
+	 * return 
+	 *  dbt: wet-bulb temperature (C)
 	 */
-	PsychrometricsJS.solveBisection = function(vmin, vmax, target, err, func) {
-	  var fmin = func(vmin); var fmax = func(vmax);
-	  if ((target - fmin)*(target-fmax) > 0) { throw "Bisection solver error: target value " + target + " is not within interval vmin|vmax [" + fmin + ";" + fmax + "]. Function may not be monotonous"; }
-	  if (Math.abs(fmin - target) <= err) { return vmin; }
-	  if (Math.abs(fmax - target) <= err) { return vmax; }
+	private static class GetDryBulbTemperatureFromWbtDptPFunctionObject implements Solver.FunctionObject {
+		private Double _wbt;
+		private Double _p;
+		public GetDryBulbTemperatureFromWbtDptPFunctionObject(Double wbt, Double p) {
+			_wbt = wbt; _p = p;
+		}
 
-	  var v = 0.5*(vmin+vmax); var f = func(v);
-	  while (Math.abs(f-target)>err) {
-	    if ((target-f)*(target-fmin) < 0) { // Target is between vmin and v. Update vmax/fmax
-	      vmax = v; fmax = f;
-	    } else if ((target-f)*(target-fmax) < 0) { // Target is between v and vmax. Update vmin/fmin
-	      vmin = v; fmin = f;
-	    } else {
-	      throw "Bisection solver error: Can find updated interval";
-	    }
-	    v = 0.5*(vmin+vmax); f = func(v);
-	  };
-	  return v;
+		@Override
+		public Double evaluate(Double v) throws Exception {
+			Double w = PsychrometricsState.getHumidityRatioFromDbtWbt(v, _wbt, _p);
+			return PsychrometricsState.getDewPointTemperature(w, _p);
+		}		
+	}
+	private static Double getDryBulbTemperatureFromWbtDptP(Double wbt, Double dpt, Double p) throws Exception {
+	  return Solver.INSTANCE.gradient(TMIN, TMAX, wbt, dpt, 0.1, 1e-8,
+			  new GetDryBulbTemperatureFromWbtDptPFunctionObject(wbt, p));
 	};
+	
+	/** Following functions are using a marching algorithm. TODO convert from JS to Java
+	
+	PsychrometricsJS.State.prototype.from_hrh = function(h, rh, p) {
+		  this.h = h; this.rh = rh; this.p = p;
+		  
+		  var dbt = null; var dbtp = null; var wbt = null; var wbtp = null; var w;
+		  var it = 0; var err = 1e-4;
 
-	/**
-	 * Numerical Solver: Using gradient method
-	 */
-	PsychrometricsJS.solveGradient = function(vmin, vmax, vInit, target, delta, err, func) {
-	  var v = vInit; var f = func(v); var it=0; var f1 = null; var alpha=0.3;
-	  while ((Math.abs(f-target)>err) && (it < 100)) {
-	    f1 = func(v+delta);
-	    if (Math.abs(f1-f)<1e-8) {throw "Gradient solver: Increase delta to get more meaningfull answer";}
-	    v = v + alpha*(target-f)/(f1-f)*delta;
-	    v = (v < vmin) ? vmin : ((v > vmax) ? vmax : v);
-	    f = func(v);
-	    ++it;
-	  }
-	  if (Math.abs(f-target)>err) {throw "Failed to converge gradient solver";}
-	  return v;
-	};
+		  dbt = PsychrometricsJS.SI.getDryBulbTemperatureFromHW(this.h.to_kjkgda(), 2.0*PsychrometricsJS.WMIN); // initial guess with little moisture
+		  while ((dbtp == null) || (wbtp == null) || ((it < 100) && ((Math.abs(dbt-dbtp)>err) || (Math.abs(wbt-wbtp)>err)))) {
+		    dbtp = dbt; wbtp = wbt;
+		    w = PsychrometricsJS.SI.getHumidityRatioFromDbtH(dbt, this.h.to_kjkgda());
+		    wbt = PsychrometricsJS.SI.getWetBulbTemperatureFromDbtWP(dbt, w, this.p.to_pascal());
+		    dbt = PsychrometricsJS.SI.getDryBulbTemperatureFromWbtRhP(wbt, this.rh.to_zerotoone(), this.p.to_pascal());
+		    it ++;
+		  }
+		  if ((Math.abs(dbt-dbtp)>err) || (Math.abs(wbt-wbtp)>err)) { throw "Failed to converge marching algorithm..."; }
+
+		  this.dbt = new PsychrometricsJS.Temperature(dbt, PsychrometricsJS.Units.CELSIUS);
+		  this.wbt = new PsychrometricsJS.Temperature(wbt, PsychrometricsJS.Units.CELSIUS);
+		};
+
+		PsychrometricsJS.State.prototype.from_wrh = function(w, rh, p) {
+		  this.w = w; this.rh = rh; this.p = p;
+		  
+		  var dbt = null; var dbtp = null; var wbt = null; var wbtp = null;
+		  var it = 0; var err = 1e-4;
+
+		  wbt = PsychrometricsJS.SI.getDewPointTemperature(this.w.to_kgkgda(), this.p.to_pascal());  
+		  while ((dbtp == null) || (wbtp == null) || ((it < 100) && ((Math.abs(dbt-dbtp)>err) || (Math.abs(wbt-wbtp)>err)))) {
+		    dbtp = dbt; wbtp = wbt;
+		    dbt = PsychrometricsJS.SI.getDryBulbTemperatureFromWbtRhP(wbt, this.rh.to_zerotoone(), this.p.to_pascal());
+		    wbt = PsychrometricsJS.SI.getWetBulbTemperatureFromDbtWP(dbt, this.w.to_kgkgda(), this.p.to_pascal());
+		    it ++;
+		  }
+		  if ((Math.abs(dbt-dbtp)>err) || (Math.abs(wbt-wbtp)>err)) { throw "Failed to converge marching algorithm..."; }
+
+		  this.dbt = new PsychrometricsJS.Temperature(dbt, PsychrometricsJS.Units.CELSIUS);
+		  this.wbt = new PsychrometricsJS.Temperature(wbt, PsychrometricsJS.Units.CELSIUS);
+		};
+		*/
+
 
 }
